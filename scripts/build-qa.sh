@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$PROJECT_DIR"
+export CLANG_MODULE_CACHE_PATH="$PROJECT_DIR/.build/clang-cache"
+swift build -c debug --product LightReader --disable-sandbox --cache-path "$PROJECT_DIR/.build/swift-cache"
+BINARY_DIR="$(swift build -c debug --show-bin-path --disable-sandbox)"
+QA_APP="$PROJECT_DIR/build/Light Reader QA.app"
+mkdir -p "$QA_APP/Contents/MacOS" "$QA_APP/Contents/Resources" "$PROJECT_DIR/build/qa-data/.local"
+cp "$BINARY_DIR/LightReader" "$QA_APP/Contents/MacOS/LightReader"
+cp Resources/Info.plist "$QA_APP/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c 'Set :CFBundleIdentifier local.lightreader.mac.qa' "$QA_APP/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c 'Set :CFBundleName Light Reader QA' "$QA_APP/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c 'Set :CFBundleDisplayName Light Reader QA' "$QA_APP/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Add :LightReaderProjectRoot string $PROJECT_DIR/build/qa-data" "$QA_APP/Contents/Info.plist"
+cp Resources/AppIcon.icns "$QA_APP/Contents/Resources/AppIcon.icns"
+codesign --force --sign - "$QA_APP"
+echo "Built QA app: $QA_APP"
