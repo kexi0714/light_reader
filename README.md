@@ -1,3 +1,5 @@
+**English** | [简体中文](README.zh-CN.md)
+
 # Light Reader
 
 **A lightweight native macOS PDF reader for translating English papers and adding focused annotations.**
