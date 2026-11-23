@@ -1,6 +1,8 @@
 # Releasing and upgrades
 
-This document is the compatibility contract for future Light Reader releases.
+This document is the compatibility contract for future LiRe releases.
+
+LiRe (from “light reading”) was previously named Light Reader. Keep the existing bundle identifier and Application Support directory so upgrades retain settings, credentials, and reading history. Swift module names remain internal implementation details. When upgrading from Light Reader, quit and remove the old app from Applications after installing LiRe; the app filenames differ.
 
 ## Stable identity and user data
 
@@ -94,8 +96,8 @@ Packaging, notarization, uploading to GitHub Releases, and publishing source are
 
 For users:
 
-1. Save open PDFs and quit Light Reader.
-2. Open the newer DMG and replace Light Reader in Applications.
+1. Save open PDFs and quit LiRe.
+2. Open the newer DMG and replace LiRe in Applications.
 3. Launch the new app. It reads the same Application Support folder.
 
 Do not uninstall by deleting Application Support during an upgrade. Replacing the application bundle does not remove PDF annotations or the external data folder.

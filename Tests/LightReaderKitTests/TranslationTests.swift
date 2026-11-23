@@ -5,6 +5,7 @@ final class TranslationTests {
     func testLineCleanupPreservesParagraphsAndCitation() {
         expectEqual(TextPreparation.normalize("The experi-\nment improves\naccuracy [12].\n\nA second paragraph."), "The experiment improves accuracy [12].\n\nA second paragraph.")
         expectEqual(TextPreparation.normalize("well-known methods"), "well-known methods")
+        expectEqual(TextPreparation.normalizeSelection("ral focus in recent research.\n\nwith accidents in the field."), "ral focus in recent research. with accidents in the field.")
     }
     func testEndpointNormalization() throws {
         try expectEqual(try TranslationService.modelURL("https://example.com").absoluteString, "https://example.com/v1/chat/completions")

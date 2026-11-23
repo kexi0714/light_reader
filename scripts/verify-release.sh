@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-APP_DIR="${1:-$PROJECT_DIR/build/release/Light Reader.app}"
+APP_DIR="${1:-$PROJECT_DIR/build/release/LiRe.app}"
 EXPECTED_ARCH="${2:-arm64}"
 PLIST="$APP_DIR/Contents/Info.plist"
 EXECUTABLE="$APP_DIR/Contents/MacOS/LightReader"

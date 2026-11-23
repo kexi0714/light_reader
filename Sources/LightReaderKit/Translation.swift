@@ -52,6 +52,15 @@ public enum TextPreparation {
         value = value.replacingOccurrences(of: "[ \\t]+", with: " ", options: .regularExpression)
         return value.replacingOccurrences(of: "\u{2029}", with: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
     }
+
+    /// Normalize text extracted from a PDF selection into one continuous source string.
+    /// PDF text extraction may expose paragraph boundaries between adjacent selected ranges;
+    /// those boundaries should not become blank lines in the translation sidebar.
+    public static func normalizeSelection(_ text: String) -> String {
+        normalize(text)
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }
 
 public struct TranslationService {

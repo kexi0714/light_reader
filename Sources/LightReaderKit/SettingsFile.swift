@@ -32,7 +32,7 @@ enum SettingsFileError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .unsupportedVersion(let version):
-            return "此配置由更新版本的软件创建（格式版本 \(version)），请升级 Light Reader。原配置未被修改。"
+            return "此配置由更新版本的软件创建（格式版本 \(version)），请升级 LiRe。原配置未被修改。"
         }
     }
 }

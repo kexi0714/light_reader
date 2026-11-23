@@ -7,24 +7,15 @@ let resources = root.appendingPathComponent("Resources")
 let iconset = root.appendingPathComponent("build/AppIcon.iconset")
 try FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
 
+let iconURL = resources.appendingPathComponent("Brand/LiRe-artwork.png")
+guard let artwork = NSImage(contentsOf: iconURL) else { throw CocoaError(.fileReadCorruptFile) }
+
 func icon(_ size: Int) -> Data {
     let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: size, pixelsHigh: size, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-    let context = NSGraphicsContext.current!.cgContext
-    context.scaleBy(x: CGFloat(size) / 1024, y: CGFloat(size) / 1024)
-    NSColor(srgbRed: 0.18, green: 0.36, blue: 0.30, alpha: 1).setFill()
-    NSBezierPath(roundedRect: CGRect(x: 40, y: 40, width: 944, height: 944), xRadius: 210, yRadius: 210).fill()
-    NSColor(srgbRed: 0.96, green: 0.95, blue: 0.90, alpha: 1).setFill()
-    NSBezierPath(roundedRect: CGRect(x: 230, y: 220, width: 564, height: 610), xRadius: 42, yRadius: 42).fill()
-    NSColor(srgbRed: 0.77, green: 0.84, blue: 0.74, alpha: 1).setFill()
-    NSBezierPath(roundedRect: CGRect(x: 230, y: 200, width: 564, height: 54), xRadius: 18, yRadius: 18).fill()
-    NSColor(srgbRed: 0.33, green: 0.47, blue: 0.39, alpha: 1).setFill()
-    for y in [650, 550, 450] { NSBezierPath(roundedRect: CGRect(x: 325, y: y, width: 370, height: 25), xRadius: 12, yRadius: 12).fill() }
-    NSColor(srgbRed: 0.93, green: 0.68, blue: 0.38, alpha: 1).setFill()
-    NSBezierPath(roundedRect: CGRect(x: 310, y: 432, width: 250, height: 57), xRadius: 8, yRadius: 8).fill()
-    NSColor(srgbRed: 0.33, green: 0.47, blue: 0.39, alpha: 1).setFill()
-    NSBezierPath(roundedRect: CGRect(x: 325, y: 450, width: 220, height: 21), xRadius: 10, yRadius: 10).fill()
+    NSGraphicsContext.current?.imageInterpolation = .high
+    artwork.draw(in: NSRect(x: 0, y: 0, width: size, height: size), from: .zero, operation: .copy, fraction: 1)
     NSGraphicsContext.restoreGraphicsState()
     return rep.representation(using: .png, properties: [:])!
 }
@@ -32,6 +23,26 @@ for size in [16, 32, 128, 256, 512] {
     try icon(size).write(to: iconset.appendingPathComponent("icon_\(size)x\(size).png"))
     try icon(size * 2).write(to: iconset.appendingPathComponent("icon_\(size)x\(size)@2x.png"))
 }
+
+// ICNS accepts PNG payloads; write the container directly so asset generation
+// also works with Command Line Tools installations lacking iconutil support.
+func bigEndian(_ number: Int) -> Data {
+    var value = UInt32(number).bigEndian
+    return withUnsafeBytes(of: &value) { Data($0) }
+}
+var chunks = Data()
+for (type, size) in [("icp4", 16), ("icp5", 32), ("icp6", 64), ("ic07", 128), ("ic08", 256), ("ic09", 512), ("ic10", 1024)] {
+    let png = icon(size)
+    chunks.append(Data(type.utf8))
+    chunks.append(bigEndian(png.count + 8))
+    chunks.append(png)
+}
+var icns = Data("icns".utf8)
+icns.append(bigEndian(chunks.count + 8))
+icns.append(chunks)
+try icns.write(to: resources.appendingPathComponent("AppIcon.icns"))
+
+if CommandLine.arguments.contains("--icon-only") { exit(0) }
 
 var mediaBox = CGRect(x: 0, y: 0, width: 612, height: 792)
 let pdfURL = root.appendingPathComponent("docs/Sample Paper.pdf")
@@ -73,21 +84,3 @@ for page in 1...2 {
 }
 context.closePDF()
 print("Generated app icon and docs/Sample Paper.pdf")
-
-// ICNS accepts PNG payloads; write the container directly so asset generation
-// also works with Command Line Tools installations lacking iconutil support.
-func bigEndian(_ number: Int) -> Data {
-    var value = UInt32(number).bigEndian
-    return withUnsafeBytes(of: &value) { Data($0) }
-}
-var chunks = Data()
-for (type, size) in [("icp4", 16), ("icp5", 32), ("icp6", 64), ("ic07", 128), ("ic08", 256), ("ic09", 512), ("ic10", 1024)] {
-    let png = icon(size)
-    chunks.append(Data(type.utf8))
-    chunks.append(bigEndian(png.count + 8))
-    chunks.append(png)
-}
-var icns = Data("icns".utf8)
-icns.append(bigEndian(chunks.count + 8))
-icns.append(chunks)
-try icns.write(to: resources.appendingPathComponent("AppIcon.icns"))

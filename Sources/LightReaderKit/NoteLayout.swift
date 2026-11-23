@@ -2,14 +2,25 @@ import AppKit
 import PDFKit
 
 /// PDFKit's FreeText baseline differs slightly from TextKit's baseline. Measure
-/// baseline and line spacing once per font so editing matches the saved PDF.
+/// the baseline and reserve enough height for PDFKit to draw every saved line.
 enum NoteLayout {
     private struct Metrics { let inset: NSSize; let lineSpacing: CGFloat }
     private static var cached: [String: Metrics] = [:]
 
     static func inset(for font: NSFont) -> NSSize { metrics(for: font).inset }
 
-    static func paragraph(for font: NSFont, alignment: NSTextAlignment = .left) -> NSParagraphStyle {
+    static func singleLineHeight(for font: NSFont) -> CGFloat {
+        ceil(NSLayoutManager().defaultLineHeight(for: font) + 2 * inset(for: font).height)
+    }
+
+    static func paragraph(alignment: NSTextAlignment = .left) -> NSParagraphStyle {
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = alignment
+        paragraph.lineHeightMultiple = 1
+        return paragraph // No added space between lines or paragraphs.
+    }
+
+    static func nativeParagraph(for font: NSFont, alignment: NSTextAlignment = .left) -> NSParagraphStyle {
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = alignment
         paragraph.lineSpacing = metrics(for: font).lineSpacing

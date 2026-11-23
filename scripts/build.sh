@@ -9,17 +9,18 @@ if [[ "$CONFIGURATION" != "release" && "$CONFIGURATION" != "debug" ]] ||
   echo "Usage: ./scripts/build.sh [release|debug] [native|arm64|universal]" >&2
   exit 1
 fi
-mkdir -p .build/clang-cache .build/swift-cache build
-export CLANG_MODULE_CACHE_PATH="$PROJECT_DIR/.build/clang-cache"
+mkdir -p build
+source "$PROJECT_DIR/scripts/prepare-build.sh"
+prepare_build_cache "$PROJECT_DIR"
 if [[ "$CONFIGURATION" == "debug" ]]; then
-  APP_DIR="$PROJECT_DIR/build/Light Reader.app"
+  APP_DIR="$PROJECT_DIR/build/LiRe.app"
 else
-  APP_DIR="$PROJECT_DIR/build/release/Light Reader.app"
+  APP_DIR="$PROJECT_DIR/build/release/LiRe.app"
 fi
 # Construct a clean bundle; never copy a project directory or personal settings.
 STAGING_DIR="$(mktemp -d "$PROJECT_DIR/build/bundle.XXXXXX")"
 trap 'rm -rf "$STAGING_DIR"' EXIT
-STAGED_APP="$STAGING_DIR/Light Reader.app"
+STAGED_APP="$STAGING_DIR/LiRe.app"
 mkdir -p "$STAGED_APP/Contents/MacOS" "$STAGED_APP/Contents/Resources"
 BUILD_ARGS=(-c "$CONFIGURATION" --product LightReader --disable-sandbox --cache-path "$PROJECT_DIR/.build/swift-cache")
 if [[ "$ARCHITECTURE" == "universal" ]]; then

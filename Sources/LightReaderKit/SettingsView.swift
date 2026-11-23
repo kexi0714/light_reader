@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
+    var embedded = false
     @State private var configuration = SettingsStore.shared.configuration
     @State private var modelSecret = ""
     @State private var baiduSecret = ""
@@ -10,17 +11,21 @@ struct SettingsView: View {
     @State private var secretsLoaded = false
     @State private var testTask: Task<Void, Never>?
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            HStack(spacing: 12) {
-                Image(systemName: "character.bubble.fill").font(.system(size: 26)).foregroundStyle(readerAccent)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("翻译设置").font(.system(size: 22, weight: .semibold))
-                    Text("连接你自己的翻译服务，配置在所有文献窗口中生效。").font(.system(size: 12)).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: embedded ? 18 : 22) {
+            if !embedded {
+                HStack(spacing: 12) {
+                    Image(systemName: "character.bubble.fill").font(.system(size: 26)).foregroundStyle(readerAccent)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("翻译设置").font(.system(size: 22, weight: .semibold))
+                        Text("连接你自己的翻译服务，配置在所有文献窗口中生效。").font(.system(size: 12)).foregroundStyle(.secondary)
+                    }
                 }
             }
-            Picker("翻译来源", selection: $configuration.provider) {
-                ForEach(TranslationProvider.allCases, id: \.self) { Text($0.title).tag($0) }
-            }.pickerStyle(.segmented)
+            field("翻译来源") {
+                Picker("翻译来源", selection: $configuration.provider) {
+                    ForEach(TranslationProvider.allCases, id: \.self) { Text($0.title).tag($0) }
+                }.pickerStyle(.segmented).labelsHidden()
+            }
             VStack(alignment: .leading, spacing: 17) {
                 if configuration.provider == .model {
                     field("API 地址") { TextField("https://your-api.example/v1", text: $configuration.endpoint) }
@@ -35,7 +40,7 @@ struct SettingsView: View {
             }.textFieldStyle(.roundedBorder)
             HStack(alignment: .top, spacing: 8) {
                 Image(systemName: "key.fill").foregroundStyle(readerAccent)
-                Text("密钥以本地文件保存，仅当前用户可读写，不使用钥匙串。只有选中的文字会发送到当前服务，PDF 文件保留在本地。").foregroundStyle(.secondary)
+                Text("密钥以本地文件保存，仅当前用户可读写，不使用钥匙串。只有原文区域的文字会发送到当前服务，PDF 文件保留在本地。").foregroundStyle(.secondary)
             }.font(.system(size: 11)).lineSpacing(4).padding(13).frame(maxWidth: .infinity, alignment: .leading).background(readerAccent.opacity(0.06), in: RoundedRectangle(cornerRadius: 8))
             Button("打开配置文件夹") {
                 do {
@@ -47,7 +52,7 @@ struct SettingsView: View {
                 Label(message, systemImage: isError ? "exclamationmark.circle" : "checkmark.circle")
                     .font(.system(size: 12)).foregroundStyle(isError ? Color.red : readerAccent).textSelection(.enabled)
             }
-            Spacer(minLength: 0)
+            if !embedded { Spacer(minLength: 0) }
             HStack {
                 Button { testConnection() } label: {
                     HStack(spacing: 7) { if testing { ProgressView().controlSize(.small) }; Text(testing ? "正在测试…" : "测试连接") }
@@ -56,7 +61,9 @@ struct SettingsView: View {
                 Button("保存设置") { save() }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction).disabled(!secretsLoaded || testing)
             }
         }
-        .padding(30).frame(width: 530, height: 580).tint(readerAccent)
+        .padding(embedded ? 16 : 30)
+        .frame(width: embedded ? nil : 530, height: embedded ? nil : 580)
+        .frame(maxWidth: .infinity, alignment: .leading).tint(readerAccent)
         .task {
             guard !secretsLoaded else { return }
             do {

@@ -8,23 +8,23 @@ if [[ "$ARCHITECTURE" != "universal" && "$ARCHITECTURE" != "native" && "$ARCHITE
   exit 1
 fi
 ./scripts/build.sh release "$ARCHITECTURE"
-APP_DIR="$PROJECT_DIR/build/release/Light Reader.app"
+APP_DIR="$PROJECT_DIR/build/release/LiRe.app"
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_DIR/Contents/Info.plist")"
 LABEL="$ARCHITECTURE"
 if [[ "$ARCHITECTURE" == "native" ]]; then LABEL="$(uname -m)"; fi
 ./scripts/verify-release.sh "$APP_DIR" "$LABEL"
 mkdir -p dist
-IMAGE="$PROJECT_DIR/dist/Light-Reader-$VERSION-macOS-$LABEL.dmg"
+IMAGE="$PROJECT_DIR/dist/LiRe-$VERSION-macOS-$LABEL.dmg"
 STAGING_DIR="$(mktemp -d "$PROJECT_DIR/build/dmg.XXXXXX")"
 trap 'rm -rf "$STAGING_DIR"' EXIT
-ditto "$APP_DIR" "$STAGING_DIR/Light Reader.app"
+ditto "$APP_DIR" "$STAGING_DIR/LiRe.app"
 ln -s /Applications "$STAGING_DIR/Applications"
 cat > "$STAGING_DIR/Install.txt" <<'INSTALL'
-Light Reader
+LiRe
 
-1. Drag Light Reader.app to Applications.
+1. Drag LiRe.app to Applications.
 2. Eject this disk image.
-3. Launch Light Reader from Applications.
+3. Launch LiRe from Applications.
 4. Open Translation Settings (Command-comma) and configure your own translation API.
 
 Requires macOS 14 Sonoma or later. The default arm64 package requires Apple silicon. No Python, Conda, or source checkout is needed.
@@ -35,7 +35,7 @@ This development package has an ad-hoc signature, unless its distributor has
 signed and notarized it separately. For a trusted, unnotarized build blocked by
 macOS, review System Settings > Privacy & Security after attempting to open it.
 INSTALL
-hdiutil create -volname "Light Reader" -srcfolder "$STAGING_DIR" -format UDZO -ov "$IMAGE"
+hdiutil create -volname "LiRe" -srcfolder "$STAGING_DIR" -format UDZO -ov "$IMAGE"
 hdiutil verify "$IMAGE"
 (cd dist && shasum -a 256 "$(basename "$IMAGE")" > "$(basename "$IMAGE").sha256")
 echo "Packaged: $IMAGE"

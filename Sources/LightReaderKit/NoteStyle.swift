@@ -2,6 +2,7 @@ import AppKit
 
 /// Shared by the editor and the saved PDF annotation.
 enum NoteStyle {
+    static let defaultFontSize: CGFloat = 10
     static let fontName = "HannotateSC-W5"
     static let color = NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1)
 

@@ -34,7 +34,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             document.reader.canvas?.finishEditing(commit: true)
             document.reader.rememberPosition()
         }
-        NSDocumentController.shared.reviewUnsavedDocuments(withAlertTitle: "退出 Light Reader", cancellable: true,
+        NSDocumentController.shared.reviewUnsavedDocuments(withAlertTitle: "退出 LiRe", cancellable: true,
             delegate: self, didReviewAllSelector: #selector(didReviewDocuments(_:didReviewAll:contextInfo:)), contextInfo: nil)
         return .terminateLater
     }
@@ -74,6 +74,11 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     @objc func showSettings(_ sender: Any?) {
+        if let reader = activeReader {
+            reader.sidebarVisible = true
+            reader.translationSettingsVisible = true
+            return
+        }
         if settingsWindow == nil {
             let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView()))
             window.tabbingMode = .disallowed
@@ -90,7 +95,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         if welcomeWindow == nil {
             let window = NSWindow(contentViewController: NSHostingController(rootView: WelcomeView()))
             window.tabbingMode = .disallowed
-            window.title = "Light Reader"
+            window.title = "LiRe"
             window.styleMask = [.titled, .closable, .miniaturizable]
             window.titlebarAppearsTransparent = true
             window.isReleasedWhenClosed = false
@@ -112,6 +117,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func fitPage(_ sender: Any?) { activeReader?.fitPage() }
     @objc func noteTool(_ sender: Any?) { activeReader?.setTool(.note) }
     @objc func selectTool(_ sender: Any?) { activeReader?.setTool(.select) }
+    @objc func previousDocumentTab(_ sender: Any?) { ReaderTabs.moveSelection(by: -1, in: ReaderTabs.activeWindow) }
+    @objc func nextDocumentTab(_ sender: Any?) { ReaderTabs.moveSelection(by: 1, in: ReaderTabs.activeWindow) }
+    @objc func detachDocumentTab(_ sender: Any?) { ReaderTabs.detach(ReaderTabs.activeWindow) }
+    @objc func mergeDocumentWindows(_ sender: Any?) { ReaderTabs.mergeAll(into: ReaderTabs.activeWindow) }
     @objc func toggleSidebar(_ sender: Any?) { activeReader?.sidebarVisible.toggle() }
     @objc func undo(_ sender: Any?) { activeReader?.undo() }
     @objc func redo(_ sender: Any?) { activeReader?.redo() }
@@ -131,16 +140,16 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             item.keyEquivalentModifierMask = modifiers
             menu.addItem(item)
         }
-        let app = menu("Light Reader")
-        item(app, "关于 Light Reader", #selector(NSApplication.orderFrontStandardAboutPanel(_:)), target: NSApp)
+        let app = menu("LiRe")
+        item(app, "关于 LiRe", #selector(NSApplication.orderFrontStandardAboutPanel(_:)), target: NSApp)
         app.addItem(.separator())
         item(app, "翻译设置…", #selector(showSettings(_:)), ",", target: self)
         app.addItem(.separator())
-        item(app, "隐藏 Light Reader", #selector(NSApplication.hide(_:)), "h", target: NSApp)
+        item(app, "隐藏 LiRe", #selector(NSApplication.hide(_:)), "h", target: NSApp)
         item(app, "隐藏其他", #selector(NSApplication.hideOtherApplications(_:)), "h", target: NSApp, modifiers: [.command, .option])
         item(app, "显示全部", #selector(NSApplication.unhideAllApplications(_:)), target: NSApp)
         app.addItem(.separator())
-        item(app, "退出 Light Reader", #selector(NSApplication.terminate(_:)), "q", target: NSApp)
+        item(app, "退出 LiRe", #selector(NSApplication.terminate(_:)), "q", target: NSApp)
         let file = menu("文件")
         item(file, "打开 PDF…", #selector(openDocument(_:)), "o", target: self)
         item(file, "欢迎窗口", #selector(showWelcome), "n", target: self)
@@ -169,10 +178,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         item(window, "最小化", #selector(NSWindow.performMiniaturize(_:)), "m")
         item(window, "缩放", #selector(NSWindow.performZoom(_:)))
         window.addItem(.separator())
-        item(window, "上一个文献标签", #selector(NSWindow.selectPreviousTab(_:)), "[", modifiers: [.command, .shift])
-        item(window, "下一个文献标签", #selector(NSWindow.selectNextTab(_:)), "]", modifiers: [.command, .shift])
-        item(window, "将标签移到新窗口", #selector(NSWindow.moveTabToNewWindow(_:)))
-        item(window, "合并所有文献窗口", #selector(NSWindow.mergeAllWindows(_:)))
+        item(window, "上一个文献标签", #selector(previousDocumentTab(_:)), "[", target: self, modifiers: [.command, .shift])
+        item(window, "下一个文献标签", #selector(nextDocumentTab(_:)), "]", target: self, modifiers: [.command, .shift])
+        item(window, "将标签移到新窗口", #selector(detachDocumentTab(_:)), target: self)
+        item(window, "合并所有文献窗口", #selector(mergeDocumentWindows(_:)), target: self)
         window.addItem(.separator())
         item(window, "前置全部窗口", #selector(NSApplication.arrangeInFront(_:)), target: NSApp)
         NSApp.windowsMenu = window
@@ -189,7 +198,7 @@ struct WelcomeView: View {
                 Image(systemName: "book.pages").font(.system(size: 45, weight: .ultraLight)).foregroundStyle(readerAccent)
                     .frame(width: 82, height: 82).background(readerAccent.opacity(0.08), in: RoundedRectangle(cornerRadius: 22))
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Light Reader").font(.system(size: 31, weight: .semibold, design: .rounded))
+                    Text("LiRe").font(.system(size: 31, weight: .semibold, design: .rounded))
                     Text("让阅读，轻一点。").font(.system(size: 18)).foregroundStyle(.secondary)
                 }
                 Text("读英文文献，留下自己的思考。\n划词翻译、三色高亮、随处笔记。").font(.system(size: 13)).foregroundStyle(.secondary).lineSpacing(7)
@@ -204,7 +213,7 @@ struct WelcomeView: View {
             VStack(alignment: .leading, spacing: 26) {
                 Text("专注于文献本身").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
                 feature("text.cursor", "划选即译", "译文在右侧，阅读不中断。")
-                feature("highlighter", "标记重点", "浅绿、浅橙、浅蓝，刚刚好。")
+                feature("highlighter", "标记重点", "绿、橙、蓝，醒目又清晰。")
                 feature("t.square", "随处写下想法", "点击打字，笔记随 PDF 保存。")
                 if !recent.isEmpty {
                     Divider()
