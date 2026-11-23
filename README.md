@@ -1,6 +1,6 @@
 <p align="center"><img src="Resources/Brand/LiRe-logo.png" width="112" height="112" alt="LiRe"></p>
-<h1 align="center">LiRe</h1>
-<p align="center"><strong>Read papers in English, translate passages into Chinese, and annotate the original PDF.</strong><br>macOS 14 or later · Apple silicon · Simplified Chinese interface</p>
+<h1 align="center">LiRe: A Mac PDF reader for translating and annotating papers</h1>
+<p align="center">macOS 14 or later · Apple silicon · Simplified Chinese interface</p>
 <p align="center"><a href="https://github.com/kexi0714/light_reader/releases/latest"><strong>Download for Mac</strong></a> · <a href="#install">Installation guide</a> · <a href="README.zh-CN.md">简体中文</a></p>
 
 ## Reading a paper with LiRe

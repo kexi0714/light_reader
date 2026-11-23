@@ -1,6 +1,6 @@
 <p align="center"><img src="Resources/Brand/LiRe-logo.png" width="112" height="112" alt="LiRe"></p>
-<h1 align="center">LiRe</h1>
-<p align="center"><strong>在 Mac 上读英文论文，划词看中文，在原页做批注。</strong><br>macOS 14 及以上 · Apple 芯片 · 简体中文界面</p>
+<h1 align="center">LiRe：支持划词翻译和原文批注的 Mac 论文阅读器</h1>
+<p align="center">macOS 14 及以上 · Apple 芯片 · 简体中文界面</p>
 <p align="center"><a href="https://github.com/kexi0714/light_reader/releases/latest"><strong>下载 Mac 版</strong></a> · <a href="#安装">安装指南</a> · <a href="README.md">English</a></p>
 
 ## 用 LiRe 读一篇论文
