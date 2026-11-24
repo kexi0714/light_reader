@@ -1,6 +1,7 @@
 import AppKit
 import PDFKit
 import CoreText
+import SwiftUI
 @testable import LightReaderKit
 
 final class PDFTests {
@@ -17,6 +18,43 @@ final class PDFTests {
         context.endPDFPage()
         context.closePDF()
         return try require(PDFDocument(data: buffer as Data))
+    }
+
+    @MainActor func testDocumentFind() async throws {
+        let owner = ReaderDocument()
+        let pdf = try makePDF()
+        let second = try require(try makePDF().page(at: 0))
+        pdf.insert(second, at: 1)
+        owner.reader.pdf = pdf
+        let canvas = PDFCanvas(frame: CGRect(x: 0, y: 0, width: 500, height: 500))
+        canvas.document = pdf
+        owner.reader.canvas = canvas
+        owner.showDocumentFind(nil)
+        let request = try require(owner.reader.findRequest)
+        let fieldHost = NSHostingView(rootView: DocumentFindBar(reader: owner.reader, request: request))
+        let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 500, height: 540),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        defer { window.close() }
+        fieldHost.frame = CGRect(x: 0, y: 500, width: 500, height: 40)
+        window.contentView?.addSubview(canvas)
+        window.contentView?.addSubview(fieldHost)
+        window.makeKeyAndOrderFront(nil)
+        window.contentView?.layoutSubtreeIfNeeded()
+        for _ in 0..<50 where !(window.firstResponder is NSTextView) {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        let field = try require(window.firstResponder as? NSTextView)
+        field.insertText("RESEARCH", replacementRange: NSRange(location: NSNotFound, length: 0))
+        for _ in 0..<100 where canvas.highlightedSelections?.first == nil {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        expectEqual(canvas.highlightedSelections?.first?.string, "research")
+        expect(canvas.highlightedSelections?.first?.pages.first === pdf.page(at: 0))
+        field.doCommand(by: #selector(NSResponder.insertNewline(_:)))
+        try await Task.sleep(for: .milliseconds(50))
+        expect(canvas.highlightedSelections?.first?.pages.first === second)
+        expect(!owner.isDocumentEdited)
     }
 
     @MainActor func testSelectionAcrossScroll() throws {

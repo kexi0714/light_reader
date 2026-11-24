@@ -56,6 +56,11 @@ public final class ReaderDocument: NSDocument {
         reader.cancelTranslation()
         super.close()
     }
+    @objc func showDocumentFind(_ sender: Any?) {
+        guard reader.pdf?.isLocked == false else { return }
+        reader.canvas?.finishEditing(commit: true)
+        reader.findRequest = UUID()
+    }
     @objc func saveWithEditor(_ sender: Any?) {
         reader.canvas?.finishEditing(commit: true)
         save(sender)
@@ -101,6 +106,7 @@ final class ReaderState: ObservableObject {
     weak var owner: ReaderDocument?
     weak var canvas: PDFCanvas?
     @Published var pdf: PDFDocument?
+    @Published var findRequest: UUID?
     @Published var tool: ReaderTool = .select
     @Published private(set) var highlightColor: HighlightColor = .green
     @Published var pageIndex = 1

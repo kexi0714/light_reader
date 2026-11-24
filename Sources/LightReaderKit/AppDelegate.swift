@@ -112,6 +112,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         window.makeKeyAndOrderFront(nil)
     }
     private var activeReader: ReaderState? { (NSApp.mainWindow?.windowController?.document as? ReaderDocument)?.reader }
+    @objc func showDocumentFind(_ sender: Any?) { activeReader?.owner?.showDocumentFind(sender) }
     @objc func zoomIn(_ sender: Any?) { activeReader?.scale(1.2) }
     @objc func zoomOut(_ sender: Any?) { activeReader?.scale(1 / 1.2) }
     @objc func fitPage(_ sender: Any?) { activeReader?.fitPage() }
@@ -166,6 +167,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         item(edit, "拷贝", #selector(NSText.copy(_:)), "c")
         item(edit, "粘贴", #selector(NSText.paste(_:)), "v")
         item(edit, "全选", #selector(NSText.selectAll(_:)), "a")
+        edit.addItem(.separator())
+        item(edit, "在文献中查找…", #selector(showDocumentFind(_:)), "f", target: self)
         let view = menu("显示")
         item(view, "放大", #selector(zoomIn(_:)), "=", target: self)
         item(view, "缩小", #selector(zoomOut(_:)), "-", target: self)

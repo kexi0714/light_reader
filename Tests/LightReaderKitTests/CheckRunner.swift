@@ -45,7 +45,8 @@ struct CheckRunner {
         let settings = SettingsTests()
         let tabs = TabTests()
         let originalText = OriginalTextTests()
-        let checks: [(String, () throws -> Void)] = [
+        let checks: [(String, () async throws -> Void)] = [
+            ("Find from PDF focus, type, highlight and advance across pages", pdf.testDocumentFind),
             ("Window toolbar recolors a selected highlight", MarkupInteractionTests().testPaletteInReader),
             ("Wheel over markup and active note scrolls the PDF and preserves the page anchor", MarkupInteractionTests().testWheelOverMarkupAndEditor),
             ("Markup mouse routing in a zoomed, scrolled PDF window", MarkupInteractionTests().testWindowRouting),
@@ -101,7 +102,7 @@ struct CheckRunner {
         print("\(failures == before ? "PASS" : "FAIL") HTTP failure produces actionable error")
         for (name, check) in checks {
             let before = failures
-            do { try check() } catch { fail("\(name): \(error)") }
+            do { try await check() } catch { fail("\(name): \(error)") }
             print("\(failures == before ? "PASS" : "FAIL") \(name)")
         }
         print("\(checks.count + 1) checks, \(failures) failures")

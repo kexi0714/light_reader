@@ -32,6 +32,10 @@ struct ReaderView: View {
             Divider()
             toolbar
             Divider()
+            if let request = state.findRequest {
+                DocumentFindBar(reader: state, request: request)
+                Divider()
+            }
             ZStack {
                 PDFCanvasHost(state: state)
                 if state.locked { unlockPanel }

@@ -68,6 +68,7 @@ For a note, choose a size beside `T`, click `T`, and click the page. Click elsew
 | Shortcut | Action |
 | --- | --- |
 | `⌘O` | Open PDF files |
+| `⌘F` | Find text across the current PDF |
 | `⌘S` | Save the current PDF |
 | `⌘⇧S` | Save As |
 | `⌘W` | Close the current document |
