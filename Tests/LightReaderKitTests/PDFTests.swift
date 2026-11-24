@@ -344,6 +344,46 @@ final class PDFTests {
         expectEqual(page.annotations.count, 2)
     }
 
+    @MainActor func testLiveNoteComposition() throws {
+        let owner = ReaderDocument()
+        let pdf = try makePDF()
+        let page = try require(pdf.page(at: 0))
+        let canvas = PDFCanvas(frame: NSRect(x: 0, y: 0, width: 900, height: 900))
+        canvas.reader = owner.reader
+        owner.reader.pdf = pdf
+        canvas.document = pdf
+        canvas.beginEditing(page: page, point: NSPoint(x: 60, y: 500), annotation: nil)
+        defer { canvas.finishEditing(commit: false) }
+        let box = try require(canvas.documentView?.subviews.compactMap { $0 as? NoteEditorBox }.first)
+        let text = try require(box.subviews.compactMap { ($0 as? NSScrollView)?.documentView as? NoteTextView }.first)
+        let layout = try require(text.layoutManager)
+        let container = try require(text.textContainer)
+        let initial = box.textRect.size
+        func checkSingleLine() {
+            layout.ensureLayout(for: container)
+            var lines = 0
+            layout.enumerateLineFragments(forGlyphRange: layout.glyphRange(for: container)) { _, _, _, _, _ in lines += 1 }
+            expectEqual(lines, 1)
+            expectEqual(box.textRect.height, initial.height)
+        }
+        let automatic = NSRange(location: NSNotFound, length: 0)
+        text.insertText("笔记 ", replacementRange: automatic)
+        var syllables = ""
+        for letter in "lianxushurupinyin" {
+            syllables.append(letter)
+            text.setMarkedText(NSAttributedString(string: syllables),
+                selectedRange: NSRange(location: syllables.utf16.count, length: 0), replacementRange: automatic)
+            expect(text.hasMarkedText())
+            expectEqual(text.string, "笔记 " + syllables)
+            checkSingleLine()
+        }
+        expect(box.textRect.width > initial.width)
+        text.insertText("连续输入拼音", replacementRange: automatic)
+        expectEqual(text.string, "笔记 连续输入拼音")
+        expect(!text.hasMarkedText())
+        checkSingleLine()
+    }
+
     @MainActor func testEditingNoteMoveAndResize() throws {
         func findEditor(_ view: NSView) -> NoteTextView? {
             if let editor = view as? NoteTextView { return editor }

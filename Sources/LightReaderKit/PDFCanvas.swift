@@ -62,6 +62,25 @@ final class NoteTextView: NSTextView {
     override var undoManager: UndoManager? { textUndoManager }
     var onCommit: (() -> Void)?
     var onCancel: (() -> Void)?
+    var onPrepareInput: ((String) -> Void)?
+
+    // Let the box make room before TextKit lays out the replacement and scrolls the caret.
+    // During composition the input method replaces its marked range on every keystroke.
+    private func prepareInput(_ value: Any, replacing requested: NSRange) {
+        guard let onPrepareInput, let input = (value as? NSAttributedString)?.string ?? (value as? String) else { return }
+        let range = requested.location != NSNotFound ? requested : (hasMarkedText() ? markedRange() : selectedRange())
+        let current = string as NSString
+        guard range.location <= current.length, range.length <= current.length - range.location else { return }
+        onPrepareInput(current.replacingCharacters(in: range, with: input))
+    }
+    override func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
+        prepareInput(string, replacing: replacementRange)
+        super.setMarkedText(string, selectedRange: selectedRange, replacementRange: replacementRange)
+    }
+    override func insertText(_ string: Any, replacementRange: NSRange) {
+        prepareInput(string, replacing: replacementRange)
+        super.insertText(string, replacementRange: replacementRange)
+    }
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 { onCancel?(); return }
         if event.keyCode == 36 && event.modifierFlags.contains(.command) { onCommit?(); return }
@@ -541,6 +560,10 @@ final class PDFCanvas: PDFView {
         editingBounds = bounds
         minimumEditorHeight = bounds.height
         editorAutoWidth = annotation == nil
+        text.onPrepareInput = { [weak self] proposed in
+            guard let self, self.editorAutoWidth else { return }
+            self.resizeNoteEditor(for: proposed)
+        }
         editorAutoHeight = true
         editorDrag = nil
         editingOriginal = annotation
@@ -657,13 +680,14 @@ final class PDFCanvas: PDFView {
         if let edges = drag.edges, edges.intersection([.top, .bottom]).isEmpty { resizeNoteEditor() }
         markEditorDirty()
     }
-    private func resizeNoteEditor() {
+    private func resizeNoteEditor(for proposedText: String? = nil) {
         guard let text = editor, let page = editingPage, let font = text.font else { return }
         let crop = page.bounds(for: .cropBox)
-        let content = (text.string + "\u{200B}") as NSString
+        let content = ((proposedText ?? text.string) + "\u{200B}") as NSString
         let attributes: [NSAttributedString.Key: Any] = [.font: font, .paragraphStyle: NoteLayout.nativeParagraph(for: font, alignment: text.alignment)]
         let options: NSString.DrawingOptions = [.usesLineFragmentOrigin, .usesFontLeading]
         let inset = text.textContainerInset
+        let oldBounds = editingBounds
         if editorAutoWidth {
             let available = crop.maxX - editingBounds.minX
             let natural = content.boundingRect(with: NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude),
@@ -677,7 +701,7 @@ final class PDFCanvas: PDFView {
             editingBounds.origin.y = max(crop.minY, editingBounds.maxY - height)
             editingBounds.size.height = height
         }
-        layoutNoteEditor()
+        if editingBounds != oldBounds { layoutNoteEditor() }
     }
     func finishEditing(commit: Bool) {
         guard let text = editor, let page = editingPage else { return }

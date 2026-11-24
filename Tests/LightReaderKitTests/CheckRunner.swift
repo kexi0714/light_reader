@@ -82,6 +82,7 @@ struct CheckRunner {
             ("Markup groups persist across pages and save/reopen without deleting overlapping operations", pdf.testMarkupGroupsSurviveSaveAcrossPages),
             ("Ungrouped legacy annotations and notes delete individually", pdf.testUngroupedAnnotationsDeleteIndividually),
             ("Compact one-shot note and text/document undo", pdf.testCompactSingleUseNoteAndToolbarUndo),
+            ("Note stays on one line throughout uncommitted IME input", pdf.testLiveNoteComposition),
             ("Active note border drag, resizing, single-line reflow, save and geometry undo at four zoom levels", pdf.testEditingNoteMoveAndResize),
             ("Note font defaults, live editing, selection, undo and PDF persistence", pdf.testNoteFontSizeEditingAndPersistence),
             ("Note move bar and resize targets keep their screen size across zoom levels", pdf.testNoteEditorScreenSizedTargets),
